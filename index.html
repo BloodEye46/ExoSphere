@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ExoSphere &mdash; Infinite Frontiers</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #03050d;
+  --ink: #fff7e8;
+  --mut: #aab3e6;
+  --acc: #ffb938;
+  --cyan: #5cc8ff;
+  --emerald: #7ef0c2;
+  --violet: #b18cff;
+  --danger: #ff7a7a;
+  --panel-bg: rgba(10, 14, 38, 0.88);
+  --panel-border: rgba(255, 255, 255, 0.14);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; }
+html, body {
+  height: 100%; margin: 0; padding: 0;
+  background: var(--bg); color: var(--ink);
+  font: 500 15px Fredoka, system-ui, sans-serif;
+  overflow: hidden; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+button { font: inherit; color: inherit; }
+em { font-style: normal; }
+
+#c { position: absolute; inset: 0; touch-action: none; z-index: 0; }
+
+/* 1. TOP RESOURCE HUD (AAA Floating Holographic Pills) */
+#hud {
+  position: absolute; z-index: 10; top: 12px; left: 0; right: 0;
+  display: flex; justify-content: center; align-items: center; gap: 10px;
+  pointer-events: none; padding: 0 16px; flex-wrap: wrap;
+}
+.hud-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(10, 14, 38, 0.78); border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px; padding: 5px 12px; backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); pointer-events: auto;
+  transition: transform 0.15s, border-color 0.2s;
+}
+.hud-pill:hover { transform: translateY(-1px); border-color: var(--acc); }
+.hud-pill .ic { width: 16px; height: 16px; flex: none; display: inline-block; }
+.hud-pill b { display: block; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.hud-pill small { display: block; color: var(--mut); font-size: 10px; margin-top: 1px; font-weight: 500; }
+.hud-btn {
+  background: rgba(10, 14, 38, 0.78); border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%; width: 34px; height: 34px; display: grid; place-items: center;
+  color: var(--ink); cursor: pointer; pointer-events: auto; backdrop-filter: blur(12px);
+  transition: transform 0.12s, border-color 0.15s;
+}
+.hud-btn:hover { border-color: var(--acc); transform: scale(1.08); }
+.hud-btn:active { transform: scale(0.92); }
+
+/* 2. PLANET HEADER */
+#planet-header {
+  position: absolute; z-index: 2; top: 68px; left: 0; right: 0;
+  text-align: center; pointer-events: none; text-shadow: 0 2px 14px rgba(0,0,0,0.8);
+}
+#pn { font-size: 28px; font-weight: 700; letter-spacing: 0.5px; }
+#pt { color: var(--mut); font-size: 13px; margin-top: 2px; }
+
+/* 3. 3D SURFACE HOTSPOTS */
+#hs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+.hs {
+  position: absolute; left: 0; top: 0; width: 56px; height: 56px; margin: -28px 0 0 -28px;
+  border: 0; border-radius: 50%; padding: 3px; cursor: pointer; pointer-events: auto;
+  background: conic-gradient(var(--acc) calc(var(--p, 1) * 1turn), rgba(255,255,255,0.22) 0);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.hs:hover { transform: scale(1.1); }
+.hs:active { transform: scale(0.92); }
+.hs > span {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; height: 100%; border-radius: 50%; background: rgba(10,14,40,0.86);
+  font-size: 14px; font-weight: 700; line-height: 1; color: #fff;
+}
+.hs .ic { width: 18px; height: 18px; }
+.hs small {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 5px; white-space: nowrap; font-size: 11px; font-weight: 600;
+  text-shadow: 0 1px 6px #000; color: #fff;
+}
+
+/* 4. OBJECTIVE FLOATING BAR */
+#obj-bar {
+  position: absolute; z-index: 8; top: 110px; left: 50%; transform: translateX(-50%);
+  width: min(380px, 92%); background: rgba(8, 12, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 20px;
+  padding: 8px 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px); pointer-events: auto; cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+#obj-bar:hover { border-color: var(--acc); transform: translateX(-50%) translateY(-2px); }
+
+/* 5. AAA FULL-SCREEN OVERLAY MODAL */
+#ov {
+  position: absolute; z-index: 15; inset: 0; display: none; flex-direction: column;
+  padding: 20px 24px 105px;
+  background: radial-gradient(ellipse at 50% 30%, rgba(13, 18, 48, 0.94), rgba(4, 6, 18, 0.98));
+  overflow-y: auto; backdrop-filter: blur(20px);
+}
+#ov.on { display: flex; animation: inModal 0.24s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes inModal { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+.ov-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 16px;
+}
+.ov-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+
+/* 6. BUTTONS & BADGES */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 20px;
+  padding: 8px 16px; background: rgba(255, 255, 255, 0.05); color: var(--ink);
+  font-weight: 600; font-size: 13px; cursor: pointer;
+  transition: transform 0.1s, background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  text-align: center;
+}
+.btn:hover:not(:disabled) { border-color: var(--acc); color: var(--acc); background: rgba(255, 185, 56, 0.1); }
+.btn:active:not(:disabled) { transform: scale(0.94); }
+.btn:disabled { opacity: 0.45; cursor: default; border-color: rgba(255, 255, 255, 0.12); }
+.btn-primary {
+  background: linear-gradient(135deg, rgba(255, 185, 56, 0.25), rgba(255, 140, 0, 0.25));
+  border-color: var(--acc); color: var(--acc);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--acc); color: #1f1400; box-shadow: 0 0 16px rgba(255, 185, 56, 0.5);
+}
+.btn-tap {
+  background: rgba(92, 200, 255, 0.15); border-color: var(--cyan); color: var(--cyan);
+}
+.btn-tap:hover { background: var(--cyan); color: #051424; }
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 12px; background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15); color: var(--mut);
+}
+
+/* 7. HOLOGRAM TELEMETRY BAR */
+.holo-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 16px;
+}
+.holo-item {
+  background: rgba(12, 18, 48, 0.7); border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px; padding: 12px 14px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.holo-item .label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--mut); }
+.holo-item .val { display: block; font-size: 22px; font-weight: 700; margin-top: 2px; }
+.holo-item .sub { display: block; font-size: 11px; margin-top: 3px; font-weight: 600; color: var(--mut); }
+
+/* 8. DIORAMA & CANVAS VIEWPORTS */
+.diorama-viewport, .tree-viewport, .galaxy-viewport, .combat-viewport {
+  position: relative; width: 100%; border-radius: 18px;
+  background: #02040b; border: 1px solid rgba(255, 255, 255, 0.16);
+  overflow: hidden; margin-bottom: 16px; box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.diorama-viewport { height: 380px; }
+.tree-viewport { height: 420px; }
+.galaxy-viewport { height: 420px; }
+.combat-viewport { height: 320px; }
+.diorama-hint {
+  position: absolute; bottom: 10px; right: 14px; font-size: 11px;
+  color: var(--mut); pointer-events: none; background: rgba(0, 0, 0, 0.6);
+  padding: 3px 8px; border-radius: 6px;
+}
+
+/* 9. DISTRICT & MINING CARDS */
+.district-card {
+  background: rgba(12, 18, 48, 0.75); border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px; padding: 16px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  margin-bottom: 14px;
+}
+.build-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px; margin-top: 10px;
+}
+.build-btn {
+  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px; padding: 12px; text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform 0.12s, border-color 0.15s, background 0.15s;
+}
+.build-btn:hover:not(:disabled) { border-color: var(--acc); background: rgba(255, 185, 56, 0.08); transform: translateY(-2px); }
+.build-btn:disabled { opacity: 0.45; cursor: default; }
+.build-btn b { font-size: 14px; color: #fff; }
+.build-btn small { display: block; margin: 4px 0 8px; font-size: 11px; }
+.cost-pill { font-size: 10px; font-weight: 700; color: var(--acc); }
+
+.mining-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px; margin-bottom: 16px;
+}
+.mine-card {
+  background: rgba(12, 18, 48, 0.75); border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px; padding: 16px;
+}
+.mine-strata {
+  position: relative; background: rgba(0, 0, 0, 0.35); border-left: 3px solid var(--acc);
+  border-radius: 8px; padding: 14px; overflow: hidden;
+}
+
+/* COMBAT CONTROLS */
+.combat-hud {
+  position: absolute; top: 12px; right: 16px; font-size: 12px;
+  color: var(--mut); background: rgba(10, 14, 38, 0.8); padding: 4px 12px; border-radius: 12px;
+}
+.combat-controls {
+  position: absolute; bottom: 12px; left: 16px; display: flex; gap: 8px;
+}
+
+/* 10. BOTTOM DOCK */
+#dock {
+  position: absolute; z-index: 20; left: 0; right: 0; bottom: 14px;
+  display: flex; justify-content: center; align-items: flex-end; gap: 16px;
+}
+.d {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 0; background: none; cursor: pointer; font-size: 11px; font-weight: 600;
+  color: var(--mut); text-shadow: 0 1px 6px #000; transition: color 0.15s, transform 0.15s;
+}
+.d i {
+  display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3); background: rgba(10,14,40,0.65);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s;
+}
+.d:hover { color: #fff; transform: translateY(-2px); }
+.d:hover i { border-color: var(--acc); }
+.d:active i { transform: scale(0.92); }
+.d.big i { width: 62px; height: 62px; border-color: var(--acc); box-shadow: 0 0 20px rgba(255,185,56,0.4); }
+.d.active { color: var(--acc); }
+.d.active i { border-color: var(--acc); box-shadow: 0 0 18px rgba(255,185,56,0.6); }
+.d svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 11. HYPERSPACE WARP FLASH */
+#flash { position: absolute; z-index: 30; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#flash.on { animation: warpFlash 0.7s ease-out; }
+@keyframes warpFlash { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+
+/* 12. WELCOME BACK POPUP */
+#modal {
+  position: absolute; z-index: 25; inset: 0; display: none; align-items: center;
+  justify-content: center; background: rgba(8,11,32,0.85); backdrop-filter: blur(12px);
+}
+#modal.on { display: flex; }
+.card { text-align: center; width: min(340px, 86%); background: rgba(12,18,48,0.92); border: 1px solid rgba(255,255,255,0.18); border-radius: 20px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+.card h2 { margin: 0 0 8px; font-size: 26px; }
+.card p { margin: 0 0 18px; color: var(--mut); line-height: 1.4; font-size: 14px; }
+
+/* 13. FLOATING POP NOTIFICATIONS */
+.pop {
+  position: fixed; z-index: 40; pointer-events: none; font-weight: 700; font-size: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8); transform: translate(-50%, -50%); animation: popAnim 1s ease-out forwards;
+}
+@keyframes popAnim { to { margin-top: -65px; opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div id="c"></div>
+<div id="hud"></div>
+<div id="planet-header"><div id="pn">Terra</div><div id="pt">Temperate World &bull; Colony</div></div>
+<div id="hs"></div>
+<div id="ov"></div>
+<div id="dock"></div>
+<div id="flash"></div>
+<div id="modal"><div class="card"><h2>Welcome Back</h2><p id="mt"></p><button class="btn btn-primary" id="mb" type="button">Collect Earnings</button></div></div>
+
+<!-- THREE.JS & POSTPROCESSING -->
+<script src="lib/three.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';"></script>
+<script src="lib/CopyShader.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js';"></script>
+<script src="lib/LuminosityHighPassShader.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js';"></script>
+<script src="lib/EffectComposer.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js';"></script>
+<script src="lib/MaskPass.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js';"></script>
+<script src="lib/RenderPass.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js';"></script>
+<script src="lib/ShaderPass.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js';"></script>
+<script src="lib/UnrealBloomPass.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js';"></script>
+
+<!-- GAME LOGIC MODULES -->
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/gen.js"></script>
+<script src="js/data.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/city.js"></script>
+<script src="js/tree.js"></script>
+<script src="js/galaxy.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+
+<script>
+(()=>{
+  window.addEventListener('DOMContentLoaded', () => {
+    const G = window.G;
+    if (!G) { console.error('Core not loaded'); return; }
+
+    const host = document.getElementById('c');
+    const S = G.load();
+
+    // Check offline earnings
+    const off = G.calcOffline ? G.calcOffline(S) : null;
+    if (off && (off.oreGained > 0 || off.researchGained > 0)) {
+      document.getElementById('mt').textContent =
+        `While you were away for ${off.elapsedHours} hours, your colonies gathered ${G.fmt(off.oreGained)} Ore and ${G.fmt(off.researchGained)} Research.`;
+      document.getElementById('modal').classList.add('on');
+      document.getElementById('mb').onclick = () => {
+        document.getElementById('modal').classList.remove('on');
+        if (G.Audio) G.Audio.research();
+      };
+    }
+
+    // Initialize 3D renderer with tap-to-mine
+    const R = new G.WorldRenderer(host, S, (x, y) => {
+      S.st.taps = (S.st.taps || 0) + 1;
+      const tapYield = G.tapYield(S);
+      S.res.ore += tapYield;
+      if (G.Audio) G.Audio.tap(820);
+      UI.pop(x, y, `+${tapYield} Ore`, G.RES.ore.c);
+      UI.updateHUD();
+    });
+
+    R.build(S.cur);
+
+    // Initialize UI Controller
+    const UI = G.UI = new G.UIController(S, R);
+
+    // Update planet header info
+    function updatePlanetTitle() {
+      const P = G.planet(S.cur);
+      document.getElementById('pn').textContent = P.name;
+      document.getElementById('pt').textContent = `${P.B.n} \u2022 Habitability ${P.hab}% \u2022 Grav ${P.gravity}G`;
+    }
+    updatePlanetTitle();
+
+    // Simulation loop (10 times per sec)
+    let lastSim = performance.now();
+    setInterval(() => {
+      const now = performance.now();
+      const dt = Math.min(0.2, (now - lastSim) / 1000);
+      lastSim = now;
+
+      G.simTick(S, dt);
+      UI.updateHUD();
+    }, 100);
+
+    // Auto-save every 5s
+    setInterval(() => G.save(S), 5000);
+    document.addEventListener('visibilitychange', () => G.save(S));
+
+    // Animation & Three.js render loop (60 FPS)
+    let lastFrame = performance.now();
+    function loop(now) {
+      const dt = Math.min(0.05, (now - lastFrame) / 1000);
+      lastFrame = now;
+
+      R.render(dt);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  });
+})();
+</script>
+</body>
+</html>
